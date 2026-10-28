@@ -6,12 +6,15 @@ const ROLE5_API_BASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ROLE5_API_URL) ||
   'http://127.0.0.1:8001';
 
-const ROLE2_API_BASE_URL = 'http://127.0.0.1:8002';  
+const ROLE2_API_BASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ROLE2_API_URL) ||
+  'http://127.0.0.1:8002';
 
 class ApiClient {
   constructor(baseUrl) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
     this.role5BaseUrl = ROLE5_API_BASE_URL.replace(/\/+$/, '');
+    this.role2BaseUrl = ROLE2_API_BASE_URL.replace(/\/+$/, '');
     this.isBackendAvailable = false;
     this.lastChecked = null;
   }
@@ -62,7 +65,6 @@ class ApiClient {
       const res = await fetch(`${this.role5BaseUrl}/docs`, {
         method: 'HEAD',
       });
-
       return {
         isOnline: res.ok || res.status === 404,
         url: this.role5BaseUrl,
@@ -76,12 +78,29 @@ class ApiClient {
     }
   }
 
+  async checkRole2Health() {
+    try {
+      const res = await fetch(`${this.role2BaseUrl}/docs`, {
+        method: 'HEAD',
+      });
+      return {
+        isOnline: res.ok || res.status === 404,
+        url: this.role2BaseUrl,
+      };
+    } catch (err) {
+      return {
+        isOnline: false,
+        url: this.role2BaseUrl,
+        error: err.message,
+      };
+    }
+  }
+
   formatSkill(skill) {
     if (!skill) return null;
 
     if (typeof skill === 'string') {
       const trimmed = skill.trim();
-
       return trimmed
         ? {
             skill_name: trimmed,
@@ -148,8 +167,9 @@ class ApiClient {
       jobDescription
     );
 
-    let res;
+    let res = null;
 
+    // 1. Try dedicated Role 5 microservice on port 8001
     try {
       res = await fetch(`${this.role5BaseUrl}/api/match`, {
         method: 'POST',
@@ -159,35 +179,32 @@ class ApiClient {
         },
         body: JSON.stringify(payload),
       });
-    } catch (err) {
-      console.error('Skill Matching API connection error:', err);
-      throw new Error(
-        'Skill analysis is temporarily unavailable. Please verify your connection or try again shortly.',
-        { cause: err }
-      );
+    } catch {
+      // Fall through to try main backend on port 8000
     }
 
-    if (!res.ok) {
-      let detail = `Status ${res.status}: ${res.statusText}`;
-
+    // 2. If port 8001 failed or not ok, fall back to unified backend on port 8000
+    if (!res || !res.ok) {
       try {
-        const errorJson = await res.json();
-
-        if (errorJson?.detail) {
-          detail =
-            typeof errorJson.detail === 'string'
-              ? errorJson.detail
-              : JSON.stringify(errorJson.detail);
-        }
-      } catch {
-        // Keep the HTTP status as the error detail.
+        res = await fetch(`${this.baseUrl}/api/match`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        console.warn('Unified backend match failed as well:', err);
       }
+    }
 
+    if (!res || !res.ok) {
+      let detail = res ? `Status ${res.status}: ${res.statusText}` : 'Connection refused on ports 8001 and 8000';
       throw new Error(`Skill analysis was unable to process the request (${detail})`);
     }
 
     const data = await res.json();
-
     return {
       data,
       payload,
@@ -199,9 +216,7 @@ class ApiClient {
   }
 
   async extractJobDescription(fileOrText, isFile = false) {
-    const health = await this.checkHealth();
-
-    if (health.isOnline) {
+    try {
       if (isFile) {
         const formData = new FormData();
         formData.append('file', fileOrText);
@@ -211,76 +226,89 @@ class ApiClient {
           body: formData,
         });
 
-        if (!res.ok) {
-          throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+        if (res.ok) {
+          return {
+            source: 'live_backend',
+            data: await res.json(),
+          };
         }
+      } else {
+        const res = await fetch(`${this.baseUrl}/api/extract/jd`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: fileOrText }),
+        });
 
-        return {
-          source: 'live_backend',
-          data: await res.json(),
-        };
+        if (res.ok) {
+          return {
+            source: 'live_backend',
+            data: await res.json(),
+          };
+        }
       }
-
-      const res = await fetch(`${this.baseUrl}/api/extract/jd`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: fileOrText }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Backend error: ${res.status} ${res.statusText}`);
-      }
-
-      return {
-        source: 'live_backend',
-        data: await res.json(),
-      };
+    } catch (err) {
+      console.warn('Extract JD backend connection error, using demo analyzer fallback:', err);
     }
 
     return {
       source: 'demo_mode',
       isDemo: true,
       data: null,
-      message:
-        'Backend is offline. Using RADIX client-side demo analyzer.',
+      message: 'Backend is offline. Using RADIX client-side demo analyzer.',
     };
   }
 
   async extractResume(file) {
-    const health = await this.checkHealth();
+    // 1. Try dedicated Role 2 port (8002) first
+    try {
+      const formDataRole2 = new FormData();
+      formDataRole2.append('file', file);
 
-    if (health.isOnline) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch(`${ROLE2_API_BASE_URL}/api/extract/resume`, {
+      const res2 = await fetch(`${this.role2BaseUrl}/api/extract/resume`, {
         method: 'POST',
-        body: formData,
+        body: formDataRole2,
       });
 
-      if (!res.ok) {
-        throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+      if (res2.ok) {
+        return {
+          source: 'live_backend',
+          data: await res2.json(),
+        };
       }
+    } catch {
+      // Standalone Role 2 not running, try unified backend
+    }
 
-      return {
-        source: 'live_backend',
-        data: await res.json(),
-      };
+    // 2. Try unified backend on port 8000
+    try {
+      const formDataMain = new FormData();
+      formDataMain.append('file', file);
+
+      const resMain = await fetch(`${this.baseUrl}/api/extract/resume`, {
+        method: 'POST',
+        body: formDataMain,
+      });
+
+      if (resMain.ok) {
+        return {
+          source: 'live_backend',
+          data: await resMain.json(),
+        };
+      }
+    } catch {
+      // Main backend also unavailable
     }
 
     return {
       source: 'demo_mode',
       isDemo: true,
       data: null,
-      message:
-        'Backend is offline. Using RADIX client-side demo parser.',
+      message: 'Backend is offline. Using RADIX client-side demo parser.',
     };
   }
 
   async runTalentCheck(candidateProfile, companyName) {
-    const health = await this.checkHealth();
-
-    if (health.isOnline) {
+    try {
       const res = await fetch(`${this.baseUrl}/api/talent-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -290,14 +318,14 @@ class ApiClient {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+      if (res.ok) {
+        return {
+          source: 'live_backend',
+          data: await res.json(),
+        };
       }
-
-      return {
-        source: 'live_backend',
-        data: await res.json(),
-      };
+    } catch (err) {
+      console.warn('Talent check backend error, using local calculator fallback:', err);
     }
 
     return {

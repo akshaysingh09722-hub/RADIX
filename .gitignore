@@ -1,7 +1,18 @@
-
 # Local environment secrets
+.env
+*.env
+.env.*
+!.env.example
 frontend/.env
+backend/.env
 
-# Python cache
+# Python cache & virtual environments
 __pycache__/
 *.py[cod]
+*$py.class
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/

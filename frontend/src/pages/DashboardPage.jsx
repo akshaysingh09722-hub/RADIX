@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -33,9 +33,27 @@ export default function DashboardPage() {
     );
   }
 
+  const [matchResult, setMatchResult] = useState(null);
   const talentCheckResult = talentCheckService.calculateReadiness(activeCandidate, 'Google LLC');
   const targetJob = jobs[0] || null;
-  const matchResult = targetJob ? matchService.calculateMatch(activeCandidate, targetJob) : null;
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMatch() {
+      if (activeCandidate && targetJob) {
+        try {
+          const res = await matchService.calculateMatch(activeCandidate, targetJob);
+          if (!cancelled && res) {
+            setMatchResult(res);
+          }
+        } catch (e) {
+          console.warn('Dashboard match calculation error:', e);
+        }
+      }
+    }
+    loadMatch();
+    return () => { cancelled = true; };
+  }, [activeCandidate, targetJob]);
 
   let completionPoints = 0;
   if (activeCandidate.name && activeCandidate.email) completionPoints += 25;

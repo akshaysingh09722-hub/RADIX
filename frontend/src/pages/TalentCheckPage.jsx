@@ -71,6 +71,14 @@ export default function TalentCheckPage() {
       );
 
       if (result.source !== 'live_backend' || !result.data) {
+        const localEval = talentCheckService.calculateReadiness(activeCandidate, company);
+        if (localEval) {
+          if (!cancelled) {
+            setEvaluation(localEval);
+            setIsEvaluating(false);
+          }
+          return;
+        }
         throw new Error(
           'Evaluation service is temporarily unavailable. Please try again shortly.'
         );

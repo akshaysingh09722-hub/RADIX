@@ -188,3 +188,65 @@ CREATE POLICY "Users can delete their own resume"
     bucket_id = 'resumes' AND
     (storage.foldername(name))[1] = auth.uid()::text
   );
+
+
+-- ==============================================================================
+-- 8. Create job_descriptions table for target job caching
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.job_descriptions (
+  id TEXT PRIMARY KEY,
+  company TEXT NOT NULL,
+  company_short TEXT,
+  role TEXT NOT NULL,
+  role_category TEXT,
+  location TEXT,
+  ctc TEXT,
+  overview TEXT,
+  skills JSONB DEFAULT '[]'::jsonb,
+  key_responsibilities JSONB DEFAULT '[]'::jsonb,
+  requirements JSONB DEFAULT '[]'::jsonb,
+  source_file TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.job_descriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view job descriptions" ON public.job_descriptions;
+CREATE POLICY "Anyone can view job descriptions"
+  ON public.job_descriptions FOR SELECT TO authenticated, anon USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can insert job descriptions" ON public.job_descriptions;
+CREATE POLICY "Authenticated users can insert job descriptions"
+  ON public.job_descriptions FOR INSERT TO authenticated WITH CHECK (true);
+
+-- ==============================================================================
+-- 9. Create saved_reports table for career intelligence history
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.saved_reports (
+  id TEXT PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL, -- 'skill_match' or 'talent_check'
+  title TEXT NOT NULL,
+  score INTEGER,
+  candidate_id TEXT,
+  candidate_name TEXT,
+  company TEXT,
+  job_id TEXT,
+  data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.saved_reports ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own reports" ON public.saved_reports;
+CREATE POLICY "Users can view their own reports"
+  ON public.saved_reports FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own reports" ON public.saved_reports;
+CREATE POLICY "Users can insert their own reports"
+  ON public.saved_reports FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own reports" ON public.saved_reports;
+CREATE POLICY "Users can delete their own reports"
+  ON public.saved_reports FOR DELETE TO authenticated USING (auth.uid() = user_id);
