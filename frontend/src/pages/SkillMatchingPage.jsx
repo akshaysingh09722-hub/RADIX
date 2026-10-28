@@ -177,7 +177,7 @@ export default function SkillMatchingPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)' }}>
-            Skill Matching (Module 5)
+            Skill Matching
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             Compare candidate competencies against target job requirements using fuzzy skill matching.
@@ -289,11 +289,10 @@ export default function SkillMatchingPage() {
           />
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
-              Calculating Fuzzy Skill Match...
+              Analyzing Skill Alignment...
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-              Evaluating candidate skills against job requirements via{' '}
-              <code style={{ color: 'var(--accent-cyan)' }}>POST /api/match</code>
+              Evaluating candidate capabilities and experience against target job requirements.
             </p>
           </div>
         </div>
@@ -329,19 +328,13 @@ export default function SkillMatchingPage() {
             </div>
             <div style={{ flex: 1 }}>
               <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                Skill Matching API Request Failed
+                Unable to complete skill analysis
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--error)', lineHeight: 1.5, marginBottom: '8px' }}>
                 {error}
               </p>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                The backend service must be running at <code style={{ color: 'var(--accent-cyan)' }}>http://127.0.0.1:8000/api/match</code>.
-                <br />
-                To launch the server locally, open a terminal and execute:
-                <br />
-                <code style={{ background: 'var(--bg-navy)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '6px', color: 'var(--text-primary)' }}>
-                  uvicorn role5_skill_matching.main:app --reload --port 8000
-                </code>
+                Skill analysis is temporarily unavailable. Please verify your connection or try again shortly.
               </p>
             </div>
           </div>
@@ -352,7 +345,7 @@ export default function SkillMatchingPage() {
               className="btn btn-primary"
             >
               <RefreshCw size={14} />
-              <span>Retry Request</span>
+              <span>Retry Analysis</span>
             </button>
           </div>
         </div>

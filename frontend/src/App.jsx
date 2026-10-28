@@ -91,6 +91,7 @@ export default function App() {
                 <Route path="job-explorer" element={<JobExplorerPage />} />
                 <Route path="jd-analytics" element={<JDAnalyticsPage />} />
                 <Route path="talent-check" element={<TalentCheckPage />} />
+                <Route path="talent-insights" element={<TalentCheckPage />} />
                 <Route path="skill-matching" element={<SkillMatchingPage />} />
                 <Route path="saved-reports" element={<SavedReportsPage />} />
                 <Route path="settings" element={<SettingsPage />} />

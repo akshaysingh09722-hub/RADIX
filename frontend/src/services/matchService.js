@@ -88,7 +88,7 @@ export const matchService = {
           matchedSkills,
           partialSkills: [],
           missingSkills,
-          summary: `${candidateProfile.name} scored ${matchScore}% match for ${jobDescription.role} at ${jobDescription.company}. Verified ${matchedSkills.length} core competencies via FastAPI matching engine.`,
+          summary: `${candidateProfile.name} scored ${matchScore}% match for ${jobDescription.role} at ${jobDescription.company}. Verified ${matchedSkills.length} core competencies across evaluated requirements.`,
           calculatedAt: new Date().toISOString(),
         };
       }

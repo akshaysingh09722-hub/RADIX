@@ -408,7 +408,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label">Profile Fit Summary (Hackathon Alignment)</label>
+          <label className="form-label">Professional Summary & Target Fit</label>
           <input
             type="text"
             name="fitSummary"

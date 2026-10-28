@@ -40,15 +40,16 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
 
   const getPageTitle = (path) => {
     switch (path) {
-      case '/': return { title: 'Overview Dashboard', subtitle: 'Your career, decoded' };
-      case '/profile': return { title: 'Candidate Profile Builder', subtitle: 'Comprehensive skill inventory' };
-      case '/resume-analyzer': return { title: 'Resume Analyzer', subtitle: 'Module 2 · Text & skill extraction' };
-      case '/job-explorer': return { title: 'Job Explorer', subtitle: 'Hackathon reference job openings' };
-      case '/jd-analytics': return { title: 'JD Analytics', subtitle: 'Module 1 · Requirement & category extraction' };
-      case '/talent-check': return { title: 'Talent Check', subtitle: 'Module 4 · Company readiness & gap analysis' };
-      case '/skill-matching': return { title: 'Skill Matching', subtitle: 'Module 5 · Job match report & action plan' };
-      case '/saved-reports': return { title: 'Saved Reports', subtitle: 'Persisted match reports & evaluations' };
-      case '/settings': return { title: 'Platform Settings', subtitle: 'Supabase & API configuration' };
+      case '/': return { title: 'Overview Dashboard', subtitle: 'Career readiness and competency intelligence' };
+      case '/profile': return { title: 'Candidate Profile', subtitle: 'Comprehensive skills and credential inventory' };
+      case '/resume-analyzer': return { title: 'Resume Analyzer', subtitle: 'Automated skill extraction and verification' };
+      case '/job-explorer': return { title: 'Job Explorer', subtitle: 'Curated enterprise job opportunities' };
+      case '/jd-analytics': return { title: 'JD Analytics', subtitle: 'Requirement analysis and category mapping' };
+      case '/talent-check':
+      case '/talent-insights': return { title: 'Talent Insights', subtitle: 'Company readiness and benchmark evaluation' };
+      case '/skill-matching': return { title: 'Skill Matching', subtitle: 'Role-fit scoring and prioritized preparation' };
+      case '/saved-reports': return { title: 'Saved Reports', subtitle: 'Archived evaluations and analysis history' };
+      case '/settings': return { title: 'Platform Settings', subtitle: 'System preferences and configuration' };
       default: return { title: 'RADIX SkillSync', subtitle: 'Career Intelligence' };
     }
   };
@@ -111,7 +112,7 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
             gap: '6px',
             textDecoration: 'none',
           }}
-          title={isBackendOnline ? 'Live FastAPI Backend Connected' : 'Running in Offline Demo Mode (Mock dataset)'}
+          title={isBackendOnline ? 'Connected to Enterprise Services' : 'Running in Offline Mode'}
         >
           <span
             style={{
@@ -123,11 +124,11 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
             }}
           />
           <span style={{ fontSize: '10.5px', fontWeight: '600' }}>
-            {isBackendOnline ? 'Live API' : 'Demo Mode'}
+            {isBackendOnline ? 'Connected' : 'Offline'}
           </span>
         </Link>
 
-        {/* Candidate Switcher Dropdown (for Hackathon Comparison) */}
+        {/* Candidate Switcher Dropdown */}
         <div style={{ position: 'relative' }} ref={candidateRef}>
           <button
             onClick={() => setCandidateDropdownOpen(!candidateDropdownOpen)}
@@ -143,7 +144,7 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
               color: 'var(--text-primary)',
               transition: 'all 0.15s ease',
             }}
-            title="Switch between your profile and hackathon benchmark candidates"
+            title="Switch active candidate profile"
           >
             <div
               style={{
@@ -168,7 +169,7 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
                 {activeCandidate?.name || 'Select Candidate'}
               </div>
               <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                {activeCandidate?.isCustomer ? 'Your Profile (Supabase)' : 'Benchmark Persona'}
+                {activeCandidate?.isCustomer ? 'Active Profile' : 'Sample Candidate'}
               </div>
             </div>
             <ChevronDown size={14} color="var(--text-muted)" />
@@ -191,7 +192,7 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
               }}
             >
               <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', fontSize: '11px', fontWeight: '600', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>
-                Active Evaluation Persona
+                Candidate Selection
               </div>
 
               <div style={{ maxHeight: '250px', overflowY: 'auto' }}>

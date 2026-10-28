@@ -50,7 +50,7 @@ export default function JobExplorerPage() {
             Job Explorer
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Hackathon reference dataset · 6 real job descriptions across Google, Microsoft, and Oracle FSS
+            Curated reference dataset · 6 target job descriptions across Google, Microsoft, and Oracle FSS
           </p>
         </div>
 

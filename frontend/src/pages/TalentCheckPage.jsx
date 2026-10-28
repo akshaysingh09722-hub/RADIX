@@ -58,7 +58,7 @@ export default function TalentCheckPage() {
 
       if (!candidateCategories || Object.keys(candidateCategories).length === 0) {
         throw new Error(
-          'This candidate profile has no competency scores. Add candidate skill levels before running Talent Check.'
+          'This candidate profile has no competency scores. Add candidate skill levels before running Talent Insights.'
         );
       }
 
@@ -72,7 +72,7 @@ export default function TalentCheckPage() {
 
       if (result.source !== 'live_backend' || !result.data) {
         throw new Error(
-          'The RADIX backend is unavailable. Start the FastAPI server and try again.'
+          'Evaluation service is temporarily unavailable. Please try again shortly.'
         );
       }
 
@@ -85,7 +85,7 @@ export default function TalentCheckPage() {
         : [];
 
       if (backendScores.length === 0 || !Number.isFinite(Number(data.readiness_score))) {
-        throw new Error('The backend returned an incomplete Talent Check evaluation.');
+        throw new Error('The evaluation service returned an incomplete response.');
       }
 
       const breakdown = backendScores.map((score) => {
@@ -192,20 +192,20 @@ export default function TalentCheckPage() {
 
   if (isEvaluating) {
   return (
-  <div style={{ padding: '60px', textAlign: 'center' }}> <p>Evaluating candidate readiness with the RADIX backend...</p> </div>
+  <div style={{ padding: '60px', textAlign: 'center' }}> <p>Evaluating candidate readiness and competencies...</p> </div>
   );
   }
 
   if (evaluationError || !evaluation) {
   return (
-  <div style={{ padding: '60px', textAlign: 'center' }}> <h2>Talent Check couldn't be completed</h2>
+  <div style={{ padding: '60px', textAlign: 'center' }}> <h2>Unable to complete talent evaluation</h2>
   <p style={{ margin: '16px 0', color: 'var(--text-muted)' }}>
-  {evaluationError || 'The backend did not return an evaluation.'} </p>
+  {evaluationError || 'The evaluation service did not return an evaluation.'} </p>
   <button
   className="btn btn-primary"
   onClick={() => setRetryCount((count) => count + 1)}
   >
-  Try again </button> </div>
+  Retry Evaluation </button> </div>
   );
   }
 
@@ -226,7 +226,7 @@ export default function TalentCheckPage() {
     try {
       await matchService.saveReport({
         type: 'talent_check',
-        title: `Talent Check — ${company} Readiness`,
+        title: `Talent Insights — ${company} Readiness`,
         candidateId: activeCandidate.id,
         candidateName: activeCandidate.name,
         company,
@@ -249,7 +249,7 @@ export default function TalentCheckPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)' }}>
-            Talent Check (Module 4)
+            Talent Insights
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             Evaluate candidate readiness against verified hiring expectations across all 12 RADIX competencies.
@@ -555,7 +555,7 @@ export default function TalentCheckPage() {
                   className="btn btn-outline btn-sm"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  <span>Practice Role Match</span>
+                  <span>View Skill Match</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -568,12 +568,12 @@ export default function TalentCheckPage() {
       <Modal
         isOpen={showFormulaModal}
         onClose={() => setShowFormulaModal(false)}
-        title="Talent Check Scoring Methodology"
+        title="Talent Evaluation Methodology"
         subtitle="Formal mathematical formula evaluated across 12 RADIX competencies"
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
           <p>
-            The RADIX Talent Check evaluates a candidate's verified proficiency across all 12 competency categories against a target company's benchmark bar ($r_i$).
+            The RADIX Talent Insights platform evaluates a candidate's verified proficiency across all 12 competency categories against a target company's benchmark bar ($r_i$).
           </p>
 
           <div

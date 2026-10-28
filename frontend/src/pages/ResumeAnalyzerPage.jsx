@@ -86,7 +86,7 @@ export default function ResumeAnalyzerPage() {
       }
 
       if (!isDemoMode && isBackendOnline) {
-        setCurrentStep('Calling Python FastAPI backend /api/extract/resume...');
+        setCurrentStep('Extracting candidate skills and credentials...');
         setAnalysisProgress(40);
         const res = await apiClient.extractResume(selectedFile);
         setAnalysisProgress(90);
@@ -164,7 +164,7 @@ export default function ResumeAnalyzerPage() {
       {/* Page Title */}
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)' }}>
-          Resume Analyzer (Module 2)
+          Resume Analyzer
         </h1>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
           Extract technical skills, education, evidence quotes, and confidence levels from PDF or DOCX resumes.
@@ -233,7 +233,7 @@ export default function ResumeAnalyzerPage() {
         </div>
 
         {/* Quick Sample Selector */}
-        <Card title="Hackathon Benchmark Resumes" subtitle="Select any candidate resume from the supplied pack">
+        <Card title="Sample Candidate Resumes" subtitle="Select a sample resume or upload your own to evaluate automated extraction">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {sampleResumes.map((sample) => {
               const isSelected = selectedFile?.name === sample.name;
@@ -331,7 +331,7 @@ export default function ResumeAnalyzerPage() {
               <CheckCircle2 size={18} color={analysisResult.source === 'live_backend' ? '#35D49A' : '#45D6FF'} />
               <div>
                 <span style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>
-                  {analysisResult.source === 'live_backend' ? 'Live FastAPI Backend Response' : 'Verified Dataset Analyzer (Demo Mode)'}
+                  {analysisResult.source === 'live_backend' ? 'AI Cloud Extraction' : 'Verified Document Extraction (Standalone Mode)'}
                 </span>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>
                   Parsed from {analysisResult.fileName}

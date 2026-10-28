@@ -1,11 +1,15 @@
-// Centralized API client for RADIX SkillSync
-// Connects to Python FastAPI backend (Role 5 Skill Matching, JD Analytics, Resume Parser)
+const API_BASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+  'http://127.0.0.1:8000';
 
-const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || 'http://127.0.0.1:8000';
+const ROLE5_API_BASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ROLE5_API_URL) ||
+  'http://127.0.0.1:8001';
 
 class ApiClient {
   constructor(baseUrl) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
+    this.role5BaseUrl = ROLE5_API_BASE_URL.replace(/\/+$/, '');
     this.isBackendAvailable = false;
     this.lastChecked = null;
   }
@@ -14,78 +18,113 @@ class ApiClient {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(`${this.baseUrl}/docs`, {
-        method: 'HEAD',
-        signal: controller.signal,
-      }).catch(() => fetch(`${this.baseUrl}/api/health`, { signal: controller.signal }));
-      clearTimeout(timeoutId);
 
-      if (res && (res.ok || res.status === 404)) {
+      let res;
+      try {
+        res = await fetch(`${this.baseUrl}/docs`, {
+          method: 'HEAD',
+          signal: controller.signal,
+        });
+      } catch {
+        res = await fetch(`${this.baseUrl}/api/health`, {
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (res.ok || res.status === 404) {
         this.isBackendAvailable = true;
         this.lastChecked = new Date();
         return { isOnline: true, url: this.baseUrl };
       }
+
       this.isBackendAvailable = false;
-      return { isOnline: false, url: this.baseUrl, error: `Status ${res?.status || 'Unknown'}` };
+      return {
+        isOnline: false,
+        url: this.baseUrl,
+        error: `Status ${res.status}`,
+      };
     } catch (err) {
       this.isBackendAvailable = false;
-      return { isOnline: false, url: this.baseUrl, error: err.message };
+      return {
+        isOnline: false,
+        url: this.baseUrl,
+        error: err.message,
+      };
+    }
+  }
+
+  async checkRole5Health() {
+    try {
+      const res = await fetch(`${this.role5BaseUrl}/docs`, {
+        method: 'HEAD',
+      });
+
+      return {
+        isOnline: res.ok || res.status === 404,
+        url: this.role5BaseUrl,
+      };
+    } catch (err) {
+      return {
+        isOnline: false,
+        url: this.role5BaseUrl,
+        error: err.message,
+      };
     }
   }
 
   formatSkill(skill) {
     if (!skill) return null;
+
     if (typeof skill === 'string') {
       const trimmed = skill.trim();
+
       return trimmed
-        ? { skill_name: trimmed, category_code: 'OTHER', evidence: null, confidence: null }
+        ? {
+            skill_name: trimmed,
+            category_code: 'OTHER',
+            evidence: null,
+            confidence: null,
+          }
         : null;
     }
+
     const name = String(skill.skill_name || skill.name || '').trim();
     if (!name) return null;
 
     return {
       skill_name: name,
-      category_code: String(skill.category_code || skill.category || 'OTHER').trim(),
+      category_code: String(
+        skill.category_code || skill.category || 'OTHER'
+      ).trim(),
       evidence: skill.evidence ? String(skill.evidence).trim() : null,
       confidence: skill.confidence ? String(skill.confidence).trim() : null,
     };
   }
 
-  /**
-   * Constructs a strict MatchRequest matching Pydantic contract in role5_skill_matching/main.py:
-   * class Skill(BaseModel):
-   *     skill_name: str
-   *     category_code: str
-   *     evidence: Optional[str] = None
-   *     confidence: Optional[str] = None
-   * class ExtractedJD(BaseModel):
-   *     source_type: str
-   *     source_file: str
-   *     company: str
-   *     role: str
-   *     skills: List[Skill]
-   * class CandidateProfile(BaseModel):
-   *     name: str
-   *     email: str
-   *     skills: List[Skill]
-   */
   buildMatchRequest(candidateProfile, jobDescription) {
     const jdSkills = (jobDescription?.skills || [])
-      .map((s) => this.formatSkill(s))
+      .map((skill) => this.formatSkill(skill))
       .filter(Boolean);
 
-    const candSkills = (candidateProfile?.skills || [])
-      .map((s) => this.formatSkill(s))
+    const candidateSkills = (candidateProfile?.skills || [])
+      .map((skill) => this.formatSkill(skill))
       .filter(Boolean);
 
     return {
       jd: {
-        source_type: String(jobDescription?.source_type || jobDescription?.fileType || 'PDF / DOCX'),
+        source_type: String(
+          jobDescription?.source_type ||
+            jobDescription?.fileType ||
+            'PDF / DOCX'
+        ),
         source_file: String(
           jobDescription?.source_file ||
-          jobDescription?.sourceFile ||
-          `${jobDescription?.company || 'Target'} - ${jobDescription?.role || 'Job'}.docx`
+            jobDescription?.sourceFile ||
+            `${jobDescription?.company || 'Target'} - ${
+              jobDescription?.role || 'Job'
+            }.docx`
         ),
         company: String(jobDescription?.company || 'Company'),
         role: String(jobDescription?.role || 'Role'),
@@ -93,54 +132,60 @@ class ApiClient {
       },
       candidate: {
         name: String(candidateProfile?.name || 'Candidate'),
-        email: String(candidateProfile?.email || 'candidate@example.com'),
-        skills: candSkills,
+        email: String(
+          candidateProfile?.email || 'candidate@example.com'
+        ),
+        skills: candidateSkills,
       },
     };
   }
 
-  /**
-   * Calls POST /api/match on role5_skill_matching FastAPI backend
-   * Returns: { jd_source_file, match_score, matched_skills, missing_skills }
-   */
   async matchSkills(candidateProfile, jobDescription) {
-    const payload = this.buildMatchRequest(candidateProfile, jobDescription);
+    const payload = this.buildMatchRequest(
+      candidateProfile,
+      jobDescription
+    );
 
     let res;
+
     try {
-      res = await fetch(`${this.baseUrl}/api/match`, {
+      res = await fetch(`${this.role5BaseUrl}/api/match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(payload),
       });
     } catch (err) {
+      console.error('Skill Matching API connection error:', err);
       throw new Error(
-        `Unable to connect to Skill Matching backend at ${this.baseUrl}/api/match (${err.message}). ` +
-        `Please ensure the FastAPI service is running: "uvicorn role5_skill_matching.main:app --reload --port 8000".`,
+        'Skill analysis is temporarily unavailable. Please verify your connection or try again shortly.',
         { cause: err }
       );
     }
 
     if (!res.ok) {
       let detail = `Status ${res.status}: ${res.statusText}`;
+
       try {
         const errorJson = await res.json();
+
         if (errorJson?.detail) {
-          detail = typeof errorJson.detail === 'string'
-            ? errorJson.detail
-            : JSON.stringify(errorJson.detail);
+          detail =
+            typeof errorJson.detail === 'string'
+              ? errorJson.detail
+              : JSON.stringify(errorJson.detail);
         }
       } catch {
-        const text = await res.text().catch(() => '');
-        if (text) detail = text;
+        // Keep the HTTP status as the error detail.
       }
-      throw new Error(`Skill Matching API rejected request (${detail})`);
+
+      throw new Error(`Skill analysis was unable to process the request (${detail})`);
     }
 
     const data = await res.json();
+
     return {
       data,
       payload,
@@ -153,72 +198,110 @@ class ApiClient {
 
   async extractJobDescription(fileOrText, isFile = false) {
     const health = await this.checkHealth();
+
     if (health.isOnline) {
       if (isFile) {
         const formData = new FormData();
         formData.append('file', fileOrText);
+
         const res = await fetch(`${this.baseUrl}/api/extract/jd`, {
           method: 'POST',
           body: formData,
         });
-        if (!res.ok) throw new Error(`Backend error: ${res.statusText}`);
-        return { source: 'live_backend', data: await res.json() };
-      } else {
-        const res = await fetch(`${this.baseUrl}/api/extract/jd`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: fileOrText }),
-        });
-        if (!res.ok) throw new Error(`Backend error: ${res.statusText}`);
-        return { source: 'live_backend', data: await res.json() };
+
+        if (!res.ok) {
+          throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+        }
+
+        return {
+          source: 'live_backend',
+          data: await res.json(),
+        };
       }
+
+      const res = await fetch(`${this.baseUrl}/api/extract/jd`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: fileOrText }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+      }
+
+      return {
+        source: 'live_backend',
+        data: await res.json(),
+      };
     }
 
     return {
       source: 'demo_mode',
       isDemo: true,
       data: null,
-      message: 'Backend is offline. Using RADIX client-side demo analyzer.'
+      message:
+        'Backend is offline. Using RADIX client-side demo analyzer.',
     };
   }
 
   async extractResume(file) {
     const health = await this.checkHealth();
+
     if (health.isOnline) {
       const formData = new FormData();
       formData.append('file', file);
+
       const res = await fetch(`${this.baseUrl}/api/extract/resume`, {
         method: 'POST',
         body: formData,
       });
-      if (!res.ok) throw new Error(`Backend error: ${res.statusText}`);
-      return { source: 'live_backend', data: await res.json() };
+
+      if (!res.ok) {
+        throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+      }
+
+      return {
+        source: 'live_backend',
+        data: await res.json(),
+      };
     }
 
     return {
       source: 'demo_mode',
       isDemo: true,
       data: null,
-      message: 'Backend is offline. Using RADIX client-side demo parser.'
+      message:
+        'Backend is offline. Using RADIX client-side demo parser.',
     };
   }
 
   async runTalentCheck(candidateProfile, companyName) {
     const health = await this.checkHealth();
+
     if (health.isOnline) {
       const res = await fetch(`${this.baseUrl}/api/talent-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile: candidateProfile, company: companyName }),
+        body: JSON.stringify({
+          profile: candidateProfile,
+          company: companyName,
+        }),
       });
-      if (!res.ok) throw new Error(`Backend error: ${res.statusText}`);
-      return { source: 'live_backend', data: await res.json() };
+
+      if (!res.ok) {
+        throw new Error(`Backend error: ${res.status} ${res.statusText}`);
+      }
+
+      return {
+        source: 'live_backend',
+        data: await res.json(),
+      };
     }
 
     return {
       source: 'demo_mode',
       isDemo: true,
-      data: null
+      data: null,
     };
   }
 }

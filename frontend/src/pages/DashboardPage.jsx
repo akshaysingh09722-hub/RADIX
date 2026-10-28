@@ -115,12 +115,12 @@ export default function DashboardPage() {
                 <span>Complete Your Profile</span>
               </button>
               <button
-                onClick={() => navigate('/talent-check')}
+                onClick={() => navigate('/talent-insights')}
                 className="btn btn-outline"
                 style={{ padding: '12px 18px' }}
               >
                 <Target size={16} />
-                <span>Run Talent Check</span>
+                <span>View Talent Insights</span>
               </button>
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
           </p>
         </Card>
 
-        <Card interactive onClick={() => navigate('/talent-check')}>
+        <Card interactive onClick={() => navigate('/talent-insights')}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>Company Readiness</span>
             <Award size={16} color="var(--success)" />
@@ -316,7 +316,7 @@ export default function DashboardPage() {
         {/* Right Persona Switcher */}
         <Card
           title="Sample Candidates Comparison"
-          subtitle="Test how Talent Check & Match scores dynamically update"
+          subtitle="Compare candidate readiness and skill match profiles"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {candidates.map((cand) => {
@@ -374,8 +374,8 @@ export default function DashboardPage() {
           </div>
 
           <div style={{ marginTop: '18px', padding: '12px 14px', background: 'rgba(69, 214, 255, 0.05)', border: '1px dashed rgba(69, 214, 255, 0.25)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-muted)' }}>
-            <span style={{ fontWeight: '600', color: 'var(--accent-cyan)' }}>Hackathon Note: </span>
-            Switching candidates instantly recalculates all matching algorithms, radar comparisons, and company gap priorities.
+            <span style={{ fontWeight: '600', color: 'var(--accent-cyan)' }}>Platform Insight: </span>
+            Switching candidates dynamically recalculates all matching algorithms, radar comparisons, and company gap priorities.
           </div>
         </Card>
       </div>
@@ -469,8 +469,8 @@ export default function DashboardPage() {
 
       {/* Recent Job Match Opportunities */}
       <Card
-        title="Sample Hackathon Job Postings"
-        subtitle="Explore how candidate aligns with real job descriptions"
+        title="Featured Job Opportunities"
+        subtitle="Explore how candidate competencies align with enterprise job specifications"
         actions={
           <button
             onClick={() => navigate('/job-explorer')}

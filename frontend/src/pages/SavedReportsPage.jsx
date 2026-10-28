@@ -65,7 +65,7 @@ export default function SavedReportsPage() {
           {[
             { id: 'ALL', label: 'All Reports' },
             { id: 'skill_match', label: 'Job Matches' },
-            { id: 'talent_check', label: 'Talent Checks' },
+            { id: 'talent_check', label: 'Talent Insights' },
           ].map((f) => (
             <button
               key={f.id}
@@ -96,14 +96,14 @@ export default function SavedReportsPage() {
               No Saved Reports Found
             </h4>
             <p style={{ fontSize: '13px', maxWidth: '380px', margin: '0 auto 18px' }}>
-              Run a Skill Match or Talent Check and click "Save Report" to persist evaluations for future review.
+              Run a Skill Match or Talent Insights evaluation and click "Save Report" to persist evaluations for future review.
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button onClick={() => navigate('/skill-matching')} className="btn btn-primary btn-sm">
                 Go to Skill Matching
               </button>
-              <button onClick={() => navigate('/talent-check')} className="btn btn-secondary btn-sm">
-                Go to Talent Check
+              <button onClick={() => navigate('/talent-insights')} className="btn btn-secondary btn-sm">
+                Go to Talent Insights
               </button>
             </div>
           </div>
@@ -138,7 +138,7 @@ export default function SavedReportsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span className={`badge ${isMatch ? 'badge-primary' : 'badge-violet'}`}>
-                        {isMatch ? 'Job Match' : 'Talent Check'}
+                        {isMatch ? 'Job Match' : 'Talent Insights'}
                       </span>
                       <span style={{ fontSize: '11px', color: 'var(--text-subtle)' }}>
                         {report.company}

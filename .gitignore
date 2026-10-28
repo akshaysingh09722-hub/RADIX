@@ -1,0 +1,7 @@
+
+# Local environment secrets
+frontend/.env
+
+# Python cache
+__pycache__/
+*.py[cod]

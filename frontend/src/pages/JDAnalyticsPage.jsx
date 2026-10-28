@@ -50,7 +50,7 @@ export default function JDAnalyticsPage() {
         };
         setActiveJob(newJob);
         setSelectedJob(newJob);
-        addToast('Job description analyzed via live FastAPI backend', 'success');
+        addToast('Job description analyzed successfully', 'success');
       } else {
         await new Promise((r) => setTimeout(r, 600));
 
@@ -135,7 +135,7 @@ export default function JDAnalyticsPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)' }}>
-            JD Analytics (Module 1)
+            JD Analytics
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             Analyze Job Descriptions, extract required skills mapped to the 12 RADIX categories, and evaluate role expectations.
@@ -155,7 +155,7 @@ export default function JDAnalyticsPage() {
       <Card>
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border-subtle)', gap: '12px', marginBottom: '18px' }}>
           {[
-            { id: 'sample', label: 'Select Hackathon Sample JD' },
+            { id: 'sample', label: 'Select Sample Job Description' },
             { id: 'paste', label: 'Paste Job Description Text' },
             { id: 'upload', label: 'Upload JD Document (PDF/DOCX)' },
           ].map((tab) => (

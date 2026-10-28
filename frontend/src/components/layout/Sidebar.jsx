@@ -36,11 +36,11 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
   const navItems = [
     { name: 'Overview', path: '/', icon: LayoutDashboard },
     { name: 'My Profile', path: '/profile', icon: User },
-    { name: 'Resume Analyzer', path: '/resume-analyzer', icon: FileText, badge: 'Role 2' },
+    { name: 'Resume Analyzer', path: '/resume-analyzer', icon: FileText },
     { name: 'Job Explorer', path: '/job-explorer', icon: Briefcase },
-    { name: 'JD Analytics', path: '/jd-analytics', icon: FileSearch, badge: 'Role 1' },
-    { name: 'Talent Check', path: '/talent-check', icon: CheckCircle, badge: 'Role 4' },
-    { name: 'Skill Matching', path: '/skill-matching', icon: GitCompare, badge: 'Role 5' },
+    { name: 'JD Analytics', path: '/jd-analytics', icon: FileSearch },
+    { name: 'Talent Insights', path: '/talent-insights', icon: CheckCircle },
+    { name: 'Skill Matching', path: '/skill-matching', icon: GitCompare },
     { name: 'Saved Reports', path: '/saved-reports', icon: Bookmark },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
@@ -130,7 +130,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
       <div className="sidebar-nav-container">
         {!collapsed && (
           <div className="sidebar-nav-header">
-            Platform Modules
+            Navigation
           </div>
         )}
         <nav className="sidebar-nav-list">
@@ -149,14 +149,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
                   <Icon size={18} />
                 </span>
                 {!collapsed && (
-                  <>
-                    <span className="sidebar-label">{item.name}</span>
-                    {item.badge && (
-                      <span className="sidebar-role-badge">
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
+                  <span className="sidebar-label">{item.name}</span>
                 )}
               </NavLink>
             );
@@ -201,7 +194,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
                 {activeCandidate.name}
               </div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {activeCandidate.isCustomer ? 'Logged In Profile' : (activeCandidate.preferredRoles?.[0] || 'Benchmark Persona')}
+                {activeCandidate.isCustomer ? 'Active Profile' : (activeCandidate.preferredRoles?.[0] || 'Sample Candidate')}
               </div>
             </div>
           </div>
@@ -259,13 +252,13 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
                   boxShadow: `0 0 6px ${isDemoMode ? 'var(--accent-cyan)' : 'var(--success)'}`,
                 }}
               />
-              {isDemoMode ? 'Demo Mode' : 'Live Backend'}
+              {isDemoMode ? 'Standalone' : 'Cloud Sync'}
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>Supabase RLS</span>
+            <span style={{ fontSize: '10px', color: 'var(--text-subtle)', letterSpacing: '0.02em' }}>v1.0 Enterprise</span>
           </>
         ) : (
           <span
-            title={isDemoMode ? 'Demo Mode Active' : 'Live Backend Connected (Supabase RLS)'}
+            title={isDemoMode ? 'Platform: Standalone' : 'Platform: Cloud Synchronized'}
             style={{
               width: '8px',
               height: '8px',

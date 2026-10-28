@@ -32,7 +32,7 @@ export default function SettingsPage() {
       const res = await apiClient.checkHealth();
       setTestResult(res);
       if (res.isOnline) {
-        addToast('FastAPI backend connection successful!', 'success');
+        addToast('Backend connection verified successfully!', 'success');
       } else {
         addToast(`Backend unreachable at ${backendUrl}. Demo mode active.`, 'warning');
       }
@@ -48,7 +48,7 @@ export default function SettingsPage() {
     profileService.resetDefaults();
     jobService.resetDefaults();
     refreshData();
-    addToast('All profiles and job descriptions restored to official hackathon benchmarks!', 'success');
+    addToast('All profiles and job descriptions restored to reference benchmarks!', 'success');
   };
 
   return (
@@ -59,15 +59,15 @@ export default function SettingsPage() {
           Platform Settings & Integration
         </h1>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Manage Python FastAPI backend connection, Supabase persistence layer, and hackathon demo modes.
+          Manage backend API services, persistence layer, and system preferences.
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-        {/* Python FastAPI Backend Connection Card */}
+        {/* Backend Services Connection Card */}
         <Card
-          title="Python FastAPI Backend"
-          subtitle="API connection for document extraction, Talent Check, and fuzzy matching"
+          title="Backend API Services"
+          subtitle="API connection for document extraction, talent insights, and skill matching"
           icon={Server}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Backend Status</div>
                 <div style={{ fontSize: '14px', fontWeight: '700', color: isBackendOnline ? '#35D49A' : '#45D6FF', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isBackendOnline ? '#35D49A' : '#45D6FF' }} />
-                  <span>{isBackendOnline ? 'Online (FastAPI Connected)' : 'Offline / Standalone (Demo Mode Active)'}</span>
+                  <span>{isBackendOnline ? 'Online (Connected)' : 'Offline / Standalone (Demo Mode Active)'}</span>
                 </div>
               </div>
               <button
@@ -90,7 +90,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">FastAPI Endpoint URL (VITE_API_URL)</label>
+              <label className="form-label">Backend API URL (VITE_API_URL)</label>
               <input
                 type="text"
                 className="form-input"
@@ -99,7 +99,7 @@ export default function SettingsPage() {
                 placeholder="http://localhost:8000"
               />
               <p style={{ fontSize: '11px', color: 'var(--text-subtle)', marginTop: '4px' }}>
-                Endpoints expected: <code>/api/health</code>, <code>/api/extract/jd</code>, <code>/api/extract/resume</code>, <code>/api/talent-check</code>, <code>/api/skill-match</code>.
+                Endpoints expected: <code>/api/health</code>, <code>/api/extract/jd</code>, <code>/api/extract/resume</code>, <code>/api/talent-check</code>, <code>/api/match</code>.
               </p>
             </div>
 
@@ -115,8 +115,8 @@ export default function SettingsPage() {
                 }}
               >
                 {testResult.isOnline
-                  ? `Success: FastAPI responded on ${testResult.url}`
-                  : `Note: FastAPI server not responding. The application will seamlessly use verified client-side NLP and algorithms.`}
+                  ? `Success: API responded on ${testResult.url}`
+                  : `Note: Backend service not responding. The application will seamlessly use verified client-side algorithms.`}
               </div>
             )}
           </div>
@@ -173,14 +173,14 @@ export default function SettingsPage() {
       </div>
 
       {/* Demo Controls & Data Management */}
-      <Card title="Demo Controls & Test Data Management" icon={Sliders}>
+      <Card title="Platform Demonstration & Reference Data" icon={Sliders}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <h4 style={{ fontSize: '15px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-              Restore Official Hackathon Benchmark Dataset
+              Reset Reference Candidates & Job Openings
             </h4>
             <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', maxWidth: '520px' }}>
-              Resets all 4 official candidates (Ananya Rao, Karthik Subramaniam, Priya Menon, Rohan Verma) and the 6 job descriptions to their factory state.
+              Restores all reference candidates (Ananya Rao, Karthik Subramaniam, Priya Menon, Rohan Verma) and curated job descriptions to default.
             </p>
           </div>
 
@@ -190,28 +190,28 @@ export default function SettingsPage() {
               className="btn btn-outline"
             >
               <Zap size={15} />
-              <span>Toggle Mode: {isDemoMode ? 'Demo Mode' : 'Live API'}</span>
+              <span>Environment: {isDemoMode ? 'Standalone' : 'Live Services'}</span>
             </button>
             <button
               onClick={handleResetData}
               className="btn btn-secondary"
             >
               <RotateCcw size={15} />
-              <span>Reset Benchmark Data</span>
+              <span>Reset Reference Data</span>
             </button>
           </div>
         </div>
       </Card>
 
       {/* 5 Integrated Modules Architecture */}
-      <Card title="RADIX Talent Match Hackathon Architecture" icon={Code2}>
+      <Card title="RADIX Platform Architecture & Core Capabilities" icon={Code2}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
           {[
-            { role: 'Role 1', name: 'JD Analytics', desc: 'PDF/DOCX extraction mapped to 12 categories' },
-            { role: 'Role 2', name: 'Resume Parsing', desc: 'Candidate credentials & skill evidence' },
-            { role: 'Role 3', name: 'Profile Builder', desc: 'Profile storage, skill editing & merge' },
-            { role: 'Role 4', name: 'Talent Check', desc: '12-category company readiness score' },
-            { role: 'Role 5', name: 'Skill Matching', desc: 'Role match scoring & gap prioritization' },
+            { capability: 'JD Intelligence', name: 'Job Analytics', desc: 'Requirement extraction mapped to 12 competency categories' },
+            { capability: 'Resume Parsing', name: 'Resume Analyzer', desc: 'Candidate credentials & verified skill evidence extraction' },
+            { capability: 'Profile Inventory', name: 'Profile Builder', desc: 'Profile persistence, competency editing & unified storage' },
+            { capability: 'Readiness Evaluation', name: 'Talent Insights', desc: '12-category target company readiness scoring' },
+            { capability: 'Fuzzy Match Engine', name: 'Skill Matching', desc: 'Role match scoring, gap analysis & targeted recommendations' },
           ].map((m, idx) => (
             <div
               key={idx}
@@ -223,7 +223,7 @@ export default function SettingsPage() {
               }}
             >
               <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: '700' }}>
-                {m.role}
+                {m.capability}
               </div>
               <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-primary)', margin: '2px 0 4px' }}>
                 {m.name}
