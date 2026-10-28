@@ -6,6 +6,8 @@ const ROLE5_API_BASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ROLE5_API_URL) ||
   'http://127.0.0.1:8001';
 
+const ROLE2_API_BASE_URL = 'http://127.0.0.1:8002';  
+
 class ApiClient {
   constructor(baseUrl) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
@@ -251,7 +253,7 @@ class ApiClient {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch(`${this.baseUrl}/api/extract/resume`, {
+      const res = await fetch(`${ROLE2_API_BASE_URL}/api/extract/resume`, {
         method: 'POST',
         body: formData,
       });
