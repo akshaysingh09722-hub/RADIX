@@ -107,7 +107,32 @@ export default function SkillMatchingPage() {
       });
       addToast(`Skill Match calculated: ${data.match_score}% match`, 'success');
     } catch (err) {
-      console.error('Skill Matching API Error:', err);
+      console.warn('Backend match unavailable, using robust client-side calculation:', err);
+      try {
+        const fallback = await matchService.calculateMatch(candidate, job);
+        if (fallback) {
+          setMatchResult({
+            match_score: Number(fallback.matchScore),
+            matched_skills: fallback.matchedSkills || [],
+            missing_skills: fallback.missingSkills || [],
+            jd_source_file: job.source_file || null,
+            totalCount: fallback.totalCount,
+            candidateId: candidate.id,
+            candidateName: candidate.name,
+            jobId: job.id,
+            jobTitle: job.role,
+            company: job.company,
+            location: job.location,
+            ctc: job.ctc,
+            calculatedAt: new Date().toISOString(),
+          });
+          setError(null);
+          addToast('Backend offline (port 8000). Running in client-side preview mode.', 'info');
+          return;
+        }
+      } catch (fallbackErr) {
+        console.error('Client-side fallback error:', fallbackErr);
+      }
       const msg = err.message || 'Failed to calculate skill match.';
       setError(msg);
       setMatchResult(null);
