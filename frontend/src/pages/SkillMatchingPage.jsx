@@ -64,9 +64,12 @@ export default function SkillMatchingPage() {
   const isSubmittingRef = useRef(false);
 
   const currentJob = selectedJob || jobs[0];
+  const availableJobs = jobs.some((j) => j.id === currentJob?.id)
+    ? jobs
+    : (currentJob ? [currentJob, ...jobs] : jobs);
 
   // Executes POST /api/match using exact Pydantic schema
-  const executeMatch = useCallback(async (candidate, job) => {
+  const executeMatch = useCallback(async (candidate, job, isManual = false) => {
     if (!candidate || !job) {
       setError('Please select both an active candidate and a target job description.');
       setMatchResult(null);
@@ -105,7 +108,7 @@ export default function SkillMatchingPage() {
         ctc: job.ctc,
         calculatedAt: new Date().toISOString(),
       });
-      addToast(`Skill Match calculated: ${data.match_score}% match`, 'success');
+      if (isManual) { addToast(`Skill Match calculated: ${data.match_score}% match`, 'success'); }
     } catch (err) {
       console.warn('Backend match unavailable, using robust client-side calculation:', err);
       try {
@@ -127,7 +130,7 @@ export default function SkillMatchingPage() {
             calculatedAt: new Date().toISOString(),
           });
           setError(null);
-          addToast('Backend offline (port 8000). Running in client-side preview mode.', 'info');
+          if (isManual) { addToast('Backend offline (port 8000). Running in client-side preview mode.', 'info'); }
           return;
         }
       } catch (fallbackErr) {
@@ -136,7 +139,7 @@ export default function SkillMatchingPage() {
       const msg = err.message || 'Failed to calculate skill match.';
       setError(msg);
       setMatchResult(null);
-      addToast(msg, 'error');
+      if (isManual) { addToast(msg, 'error'); }
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -152,7 +155,7 @@ export default function SkillMatchingPage() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    executeMatch(activeCandidate, currentJob);
+    executeMatch(activeCandidate, currentJob, true);
   };
 
   const handleSaveReport = async () => {
@@ -261,12 +264,12 @@ export default function SkillMatchingPage() {
             className="form-select"
             value={currentJob?.id || ''}
             onChange={(e) => {
-              const found = jobs.find((j) => j.id === e.target.value);
+              const found = availableJobs.find((j) => j.id === e.target.value);
               if (found) setSelectedJob(found);
             }}
             disabled={loading}
           >
-            {jobs.map((j) => (
+            {availableJobs.map((j) => (
               <option key={j.id} value={j.id}>
                 {j.company} — {j.role} ({j.skills?.length || 0} required skills)
               </option>
@@ -366,7 +369,7 @@ export default function SkillMatchingPage() {
 
           <div style={{ display: 'flex', gap: '12px', alignSelf: 'flex-end' }}>
             <button
-              onClick={() => executeMatch(activeCandidate, currentJob)}
+              onClick={() => executeMatch(activeCandidate, currentJob, true)}
               className="btn btn-primary"
             >
               <RefreshCw size={14} />
@@ -388,7 +391,7 @@ export default function SkillMatchingPage() {
               Select a candidate profile and target job description above, then click "Run Skill Match" to calculate the match score and skill gaps.
             </p>
             <button
-              onClick={() => executeMatch(activeCandidate, currentJob)}
+              onClick={() => executeMatch(activeCandidate, currentJob, true)}
               className="btn btn-primary"
             >
               <Sparkles size={15} />

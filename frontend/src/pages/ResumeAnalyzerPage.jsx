@@ -152,7 +152,7 @@ export default function ResumeAnalyzerPage() {
       const targetId = (isAuthenticated && customerProfile?.id) ? customerProfile.id : activeCandidate.id;
       const targetName = (isAuthenticated && customerProfile?.name) ? customerProfile.name : activeCandidate.name;
       await profileService.mergeResumeSkills(targetId, analysisResult.skills);
-      addToast(`Merged ${analysisResult.skills.length} skills into ${targetName}'s profile!`, 'success');
+      addToast(`Saved ${analysisResult.skills.length} skills to your profile!`, 'success');
       navigate('/profile');
     } catch (err) {
       addToast(`Merge error: ${err.message}`, 'error');
@@ -233,7 +233,7 @@ export default function ResumeAnalyzerPage() {
         </div>
 
         {/* Quick Sample Selector */}
-        <Card title="Sample Candidate Resumes" subtitle="Select a sample resume or upload your own to evaluate automated extraction">
+        <Card title="Demo Reference Resumes" subtitle="Select a reference benchmark resume or upload your own to evaluate automated extraction">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {sampleResumes.map((sample) => {
               const isSelected = selectedFile?.name === sample.name;
@@ -344,7 +344,7 @@ export default function ResumeAnalyzerPage() {
               className="btn btn-primary btn-sm"
             >
               <Check size={14} />
-              <span>Save & Merge to Candidate Profile</span>
+              <span>Save to My Profile</span>
             </button>
           </div>
 

@@ -195,8 +195,11 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
                 Candidate Selection
               </div>
 
-              <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                {candidates.map((c) => {
+              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                <div style={{ padding: '8px 14px 4px', fontSize: '10px', fontWeight: '700', color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Your Account Profile
+                </div>
+                {candidates.filter(c => c.isCustomer).map((c) => {
                   const isCurrent = c.id === activeCandidate?.id;
                   return (
                     <div
@@ -221,30 +224,78 @@ export default function TopNav({ mobileOpen, setMobileOpen }) {
                           width: '28px',
                           height: '28px',
                           borderRadius: '6px',
-                          background: c.isCustomer
-                            ? 'rgba(53, 212, 154, 0.15)'
-                            : 'rgba(255, 255, 255, 0.08)',
-                          color: c.isCustomer ? '#35D49A' : 'var(--accent-cyan)',
+                          background: 'rgba(53, 212, 154, 0.15)',
+                          color: '#35D49A',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '11px',
                           fontWeight: '700',
-                          border: c.isCustomer ? '1px solid rgba(53, 212, 154, 0.3)' : 'none',
+                          border: '1px solid rgba(53, 212, 154, 0.3)',
+                        }}
+                      >
+                        {c.avatar || 'ME'}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>{c.name}</span>
+                          <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '4px', background: 'rgba(53, 212, 154, 0.2)', color: '#35D49A' }}>
+                            You
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {c.preferredRoles?.[0] || 'Software Engineer'} · {c.skills?.length || 0} skills
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div style={{ padding: '12px 14px 4px', borderTop: '1px solid var(--border-subtle)', fontSize: '10px', fontWeight: '700', color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Demo Benchmark Personas</span>
+                  <span style={{ fontSize: '9px', fontWeight: '600', color: 'var(--accent-cyan)' }}>Reference</span>
+                </div>
+                {candidates.filter(c => !c.isCustomer).map((c) => {
+                  const isCurrent = c.id === activeCandidate?.id;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => {
+                        switchActiveCandidate(c.id);
+                        setCandidateDropdownOpen(false);
+                      }}
+                      style={{
+                        padding: '8px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        background: isCurrent ? 'var(--bg-surface-elevated)' : 'transparent',
+                        borderLeft: isCurrent ? '3px solid var(--accent-cyan)' : '3px solid transparent',
+                        transition: 'background 0.15s ease',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '6px',
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          color: 'var(--accent-cyan)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          fontWeight: '700',
                         }}
                       >
                         {c.avatar || 'CD'}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>{c.name}</span>
-                          {c.isCustomer && (
-                            <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '4px', background: 'rgba(53, 212, 154, 0.2)', color: '#35D49A' }}>
-                              You
-                            </span>
-                          )}
+                        <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>
+                          {c.name}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                           {c.preferredRoles?.[0] || 'Candidate'}
                         </div>
                       </div>

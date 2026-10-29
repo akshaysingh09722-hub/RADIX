@@ -16,44 +16,63 @@ import Card from '../components/ui/Card';
 
 export default function JDAnalyticsPage() {
   const navigate = useNavigate();
-  const { selectedJob, setSelectedJob, isDemoMode, isBackendOnline, addToast, activeCandidate } = useApp();
+  const { selectedJob, setSelectedJob, addCustomJob, isDemoMode, isBackendOnline, addToast, activeCandidate } = useApp();
 
   const [activeJob, setActiveJob] = useState(selectedJob || SAMPLE_JOBS[0]);
   const [pastedText, setPastedText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState('sample');
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadStep, setUploadStep] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleSelectSampleJob = (job) => {
     setActiveJob(job);
     setSelectedJob(job);
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleExecuteFileAnalysis = async () => {
+    if (!uploadedFile) {
+      addToast('Please select or drop a job description file first', 'warning');
+      return;
+    }
 
     setIsAnalyzing(true);
-    addToast(`Analyzing ${file.name}...`, 'info');
+    setUploadProgress(15);
+    setUploadStep('Reading document binary...');
     try {
       if (!isDemoMode && isBackendOnline) {
-        const res = await apiClient.extractJobDescription(file, true);
+        setUploadProgress(40);
+        setUploadStep('Extracting requirements via OpenRouter Nemotron...');
+        const res = await apiClient.extractJobDescription(uploadedFile, true);
+        setUploadProgress(80);
+        setUploadStep('Mapping competencies to 12 RADIX categories...');
+
         const jdData = res.data || {};
         const newJob = {
           id: `custom_jd_${Date.now()}`,
-          company: jdData.company || file.name.split('-')[0]?.trim() || 'Analyzed Company',
+          company: jdData.company || uploadedFile.name.split('-')[0]?.trim() || 'Analyzed Company',
           role: jdData.role || 'Analyzed Position',
           location: jdData.location || 'Bengaluru / Remote',
           ctc: jdData.ctc || 'Competitive CTC',
-          overview: `Extracted from ${file.name}. Identifies ${jdData.skills?.length || 0} core competencies.`,
-          sourceFile: file.name,
+          overview: `Extracted from ${uploadedFile.name}. Identifies ${jdData.skills?.length || 0} core competencies.`,
+          sourceFile: uploadedFile.name,
           skills: jdData.skills || [],
           keyResponsibilities: jdData.responsibilities || [],
           requirements: jdData.requirements || [],
         };
         setActiveJob(newJob);
-        setSelectedJob(newJob);
-        addToast(`Extracted ${newJob.skills.length} competencies from ${file.name}`, 'success');
+        if (addCustomJob) addCustomJob(newJob);
+        else setSelectedJob(newJob);
+        setUploadProgress(100);
+        setUploadStep('Extraction Complete!');
+        addToast(`Extracted ${newJob.skills.length} competencies from ${uploadedFile.name}`, 'success');
       } else {
+        setUploadProgress(50);
+        setUploadStep('Processing with client-side NLP engine...');
+        await new Promise((r) => setTimeout(r, 600));
+
         const detectedSkills = [
           { skill_name: 'Python', category_code: 'COD', evidence: 'Core language requirement', confidence: 'high' },
           { skill_name: 'Data Structures & Algorithms', category_code: 'DSA', evidence: 'Foundational algorithmic problem solving', confidence: 'high' },
@@ -63,19 +82,22 @@ export default function JDAnalyticsPage() {
         ];
         const newJob = {
           id: `custom_jd_${Date.now()}`,
-          company: file.name.split('-')[0]?.trim() || 'Uploaded JD',
-          role: file.name.split('-')[1]?.replace(/\.[^/.]+$/, "")?.trim() || 'Software Engineer',
+          company: uploadedFile.name.split('-')[0]?.trim() || 'Uploaded JD',
+          role: uploadedFile.name.split('-')[1]?.replace(/\.[^/.]+$/, "")?.trim() || 'Software Engineer',
           location: 'Bengaluru / Remote',
           ctc: '₹18,00,000 - ₹24,00,000',
-          overview: `Parsed requirements from uploaded document ${file.name}`,
-          sourceFile: file.name,
+          overview: `Parsed requirements from uploaded document ${uploadedFile.name}`,
+          sourceFile: uploadedFile.name,
           skills: detectedSkills,
           keyResponsibilities: ['Deliver production-grade code', 'Collaborate across cross-functional engineering teams'],
           requirements: ['Strong foundations in computer science and distributed systems'],
         };
         setActiveJob(newJob);
-        setSelectedJob(newJob);
-        addToast(`Parsed ${file.name} successfully`, 'success');
+        if (addCustomJob) addCustomJob(newJob);
+        else setSelectedJob(newJob);
+        setUploadProgress(100);
+        setUploadStep('Extraction Complete!');
+        addToast(`Parsed ${uploadedFile.name} successfully`, 'success');
       }
     } catch (err) {
       addToast(`Error analyzing document: ${err.message}`, 'error');
@@ -105,7 +127,8 @@ export default function JDAnalyticsPage() {
           keyResponsibilities: res.data?.responsibilities || [],
         };
         setActiveJob(newJob);
-        setSelectedJob(newJob);
+        if (addCustomJob) addCustomJob(newJob);
+        else setSelectedJob(newJob);
         addToast('Job description analyzed successfully', 'success');
       } else {
         await new Promise((r) => setTimeout(r, 600));
@@ -290,17 +313,95 @@ export default function JDAnalyticsPage() {
         )}
 
         {activeTab === 'upload' && (
-          <div style={{ textAlign: 'center', padding: '30px', border: '2px dashed var(--border-medium)', borderRadius: 'var(--radius-md)' }}>
-            <UploadCloud size={32} color="var(--accent-cyan)" style={{ marginBottom: '10px' }} />
-            <h4 style={{ color: 'var(--text-primary)', marginBottom: '4px' }}>Upload Job Description File</h4>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Upload any PDF or DOCX file to extract requirements into the 12 RADIX standards.
-            </p>
-            <input
-              type="file"
-              accept=".pdf,.docx,.doc"
-              onChange={handleFileUpload} disabled={isAnalyzing}
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) {
+                  setUploadedFile(file);
+                  addToast(`Selected ${file.name}`, 'info');
+                }
+              }}
+              onClick={() => document.getElementById('jd-file-input').click()}
+              style={{
+                background: isDragOver ? 'var(--bg-surface-elevated)' : 'var(--bg-surface)',
+                border: isDragOver ? '2px dashed var(--accent-cyan)' : '2px dashed var(--border-medium)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '36px 24px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <input
+                id="jd-file-input"
+                type="file"
+                accept=".pdf,.docx,.doc"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setUploadedFile(file);
+                    addToast(`Selected ${file.name}`, 'info');
+                  }
+                }}
+              />
+              <div
+                style={{
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '50%',
+                  background: 'rgba(69, 214, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto',
+                }}
+              >
+                <UploadCloud size={28} color="var(--accent-cyan)" />
+              </div>
+              <h4 style={{ color: 'var(--text-primary)', marginBottom: '4px', fontSize: '16px', fontWeight: '700' }}>
+                {uploadedFile ? uploadedFile.name : 'Upload Job Description Document'}
+              </h4>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                Drag and drop your PDF or Word (.docx) file here, or click to browse.
+              </p>
+              {uploadedFile && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-elevated)', border: '1px solid var(--accent-cyan)', fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: '600' }}>
+                  <CheckCircle2 size={14} color="#35D49A" />
+                  <span>Ready for Analysis ({(uploadedFile.size / 1024).toFixed(1)} KB)</span>
+                </div>
+              )}
+            </div>
+
+            {uploadedFile && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+                {isAnalyzing && (
+                  <div style={{ width: '100%', maxWidth: '420px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      <span>{uploadStep}</span>
+                      <span style={{ fontWeight: '700', color: 'var(--accent-cyan)' }}>{uploadProgress}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: 'var(--bg-surface-elevated)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'linear-gradient(90deg, #45D6FF, #35D49A)', transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={handleExecuteFileAnalysis}
+                  disabled={isAnalyzing}
+                  className="btn btn-primary"
+                  style={{ minWidth: '240px', height: '42px', fontSize: '14px' }}
+                >
+                  {isAnalyzing ? <RefreshCw size={15} className="spin-animation" /> : <Sparkles size={15} />}
+                  <span>{isAnalyzing ? (uploadStep || 'Analyzing JD...') : 'Analyze Job Description'}</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </Card>

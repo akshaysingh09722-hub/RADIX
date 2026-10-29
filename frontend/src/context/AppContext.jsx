@@ -120,6 +120,15 @@ export function AppProvider({ children }) {
     setIsDemoMode(val !== undefined ? val : (prev) => !prev);
   }, []);
 
+  const addCustomJob = useCallback((newJob) => {
+    if (!newJob) return;
+    setJobs((prev) => {
+      const filtered = prev.filter((j) => j.id !== newJob.id);
+      return [newJob, ...filtered];
+    });
+    setSelectedJob(newJob);
+  }, []);
+
   const value = {
     candidates,
     activeCandidate,
@@ -128,6 +137,7 @@ export function AppProvider({ children }) {
     jobs,
     selectedJob,
     setSelectedJob,
+    addCustomJob,
     selectedCompany,
     setSelectedCompany,
     isBackendOnline,

@@ -733,9 +733,10 @@ def run_talent_check(req: TalentCheckRequest):
         weight = float(exp.get("weight", 1.0))
         importance = exp.get("importance", "medium")
 
-        # Candidate level with realistic differentiation
-        candidate_level = float(candidate_categories.get(code, 4))
-        candidate_level = max(1.0, min(10.0, candidate_level))
+        # Candidate level: 0 if no skills/categories in this competency
+        has_any_skills = bool(candidate_categories) or bool(candidate_profile.get("skills"))
+        candidate_level = float(candidate_categories.get(code, 0.0 if not has_any_skills else 0.0))
+        candidate_level = max(0.0, min(10.0, candidate_level))
         required = max(1.0, min(10.0, required))
 
         ratio = min(1.0, candidate_level / required) if required > 0 else 1.0

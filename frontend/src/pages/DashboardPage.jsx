@@ -55,10 +55,28 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, [activeCandidate, targetJob]);
 
+  const [savedReportsCount, setSavedReportsCount] = useState(0);
+
+  useEffect(() => {
+    async function loadReportsCount() {
+      try {
+        const reports = await matchService.getReports();
+        setSavedReportsCount(reports?.length || 0);
+      } catch (e) {
+        setSavedReportsCount(0);
+      }
+    }
+    loadReportsCount();
+  }, []);
+
+  const hasSkills = (activeCandidate.skills?.length || 0) > 0;
+  const hasPendingEdu = !activeCandidate.education || activeCandidate.education.includes('Pending');
+
   let completionPoints = 0;
-  if (activeCandidate.name && activeCandidate.email) completionPoints += 25;
-  if (activeCandidate.education) completionPoints += 20;
-  if (activeCandidate.skills?.length > 4) completionPoints += 25;
+  if (activeCandidate.name && activeCandidate.email) completionPoints += 20;
+  if (!hasPendingEdu) completionPoints += 20;
+  if (activeCandidate.skills?.length > 4) completionPoints += 30;
+  else if (hasSkills) completionPoints += 15;
   if (activeCandidate.projects?.length > 0) completionPoints += 15;
   if (activeCandidate.internships?.length > 0 || activeCandidate.hackathons?.length > 0) completionPoints += 15;
   const profileCompletion = Math.min(100, completionPoints);
@@ -210,13 +228,15 @@ export default function DashboardPage() {
             <Briefcase size={16} color="var(--accent-violet)" />
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-            <span style={{ fontSize: '28px', fontWeight: '800', color: matchResult?.ratingColor || '#45D6FF' }}>
-              {matchResult?.matchScore || 82}%
+            <span style={{ fontSize: '28px', fontWeight: '800', color: hasSkills ? (matchResult?.ratingColor || '#45D6FF') : 'var(--text-muted)' }}>
+              {hasSkills ? `${matchResult?.matchScore ?? 0}%` : '--'}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>vs {targetJob?.companyShort || 'Target'}</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {hasSkills ? `vs ${targetJob?.companyShort || 'Target'}` : 'Pending Match'}
+            </span>
           </div>
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {targetJob?.role || 'Software Engineer'}
+            {hasSkills ? (targetJob?.role || 'Software Engineer') : 'Upload resume to evaluate'}
           </p>
         </Card>
 
@@ -226,13 +246,15 @@ export default function DashboardPage() {
             <Award size={16} color="var(--success)" />
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-            <span style={{ fontSize: '28px', fontWeight: '800', color: '#35D49A' }}>
-              {talentCheckResult?.readinessScore || 78}/100
+            <span style={{ fontSize: '28px', fontWeight: '800', color: hasSkills ? '#35D49A' : 'var(--text-muted)' }}>
+              {hasSkills ? `${talentCheckResult?.readinessScore ?? 0}/100` : '--'}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Google Bar</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {hasSkills ? 'Google Bar' : 'Pending Skills'}
+            </span>
           </div>
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-            {talentCheckResult?.categoriesMeeting || 8} of 12 categories met
+            {hasSkills ? `${talentCheckResult?.categoriesMeeting ?? 0} of 12 categories met` : '0 of 12 standards met'}
           </p>
         </Card>
 
@@ -258,7 +280,7 @@ export default function DashboardPage() {
             <Target size={16} color="#45D6FF" />
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-            <span style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)' }}>6</span>
+            <span style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)' }}>{savedReportsCount}</span>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Available</span>
           </div>
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
@@ -291,7 +313,23 @@ export default function DashboardPage() {
             </div>
           }
         >
-          {chartView === 'radar' ? (
+          {!hasSkills ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(69, 214, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Sparkles size={26} color="var(--accent-cyan)" />
+              </div>
+              <h4 style={{ color: 'var(--text-primary)', fontSize: '16px', fontWeight: '700' }}>
+                No Competency Data Identified Yet
+              </h4>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '420px', lineHeight: 1.6 }}>
+                Upload your resume in Resume Analyzer or add skills to activate your 12-competency RADIX radar profile and benchmark readiness comparisons.
+              </p>
+              <button onClick={() => navigate('/resume-analyzer')} className="btn btn-primary" style={{ marginTop: '8px' }}>
+                <FileSearch size={16} />
+                <span>Launch Resume Analyzer</span>
+              </button>
+            </div>
+          ) : chartView === 'radar' ? (
             <div style={{ padding: '10px 0', textAlign: 'center' }}>
               <RadarChart
                 candidateScores={activeCandidate.categoryScores}

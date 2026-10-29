@@ -20,17 +20,19 @@ export const talentCheckService = {
     const categoryBreakdown = expectations.map((exp) => {
       const code = exp.category_code;
       // Candidate level from profile categoryScores or derived from skills
-      let candidateLevel = 5;
+      let candidateLevel = 0;
       if (candidateProfile.categoryScores && candidateProfile.categoryScores[code] !== undefined) {
         candidateLevel = candidateProfile.categoryScores[code];
-      } else if (Array.isArray(candidateProfile.skills)) {
+      } else if (Array.isArray(candidateProfile.skills) && candidateProfile.skills.length > 0) {
         const catSkills = candidateProfile.skills.filter((s) => s.category_code === code);
         if (catSkills.length > 0) {
           const profs = catSkills.map((s) => s.proficiency || (s.confidence === 'high' ? 8 : s.confidence === 'medium' ? 6 : 4));
           candidateLevel = Math.round(profs.reduce((a, b) => a + b, 0) / profs.length);
         } else {
-          candidateLevel = 3;
+          candidateLevel = 0;
         }
+      } else {
+        candidateLevel = 0;
       }
 
       const requiredLevel = exp.required_level;

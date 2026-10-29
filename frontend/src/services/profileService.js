@@ -20,12 +20,12 @@ const getLocalProfiles = () => {
 
 // Helper to compute 12 RADIX category levels from candidate skills
 const computeCategoryLevels = (skills = []) => {
-  const defaults = {
-    COD: 6, DSA: 6, SWE: 6, SQL: 6, COMM: 7, APTI: 6, OOD: 6, OS: 5, NETW: 5, SYSD: 5, CLOUD: 5, AI: 5
+  const zeroLevels = {
+    COD: 0, DSA: 0, SWE: 0, SQL: 0, COMM: 0, APTI: 0, OOD: 0, OS: 0, NETW: 0, SYSD: 0, CLOUD: 0, AI: 0
   };
 
   if (!Array.isArray(skills) || skills.length === 0) {
-    return defaults;
+    return zeroLevels;
   }
 
   const sums = {};
@@ -33,14 +33,14 @@ const computeCategoryLevels = (skills = []) => {
 
   skills.forEach((s) => {
     const code = s.category_code;
-    if (code && defaults[code] !== undefined) {
-      const lvl = Number(s.level || s.proficiency) || 7;
+    if (code && zeroLevels[code] !== undefined) {
+      const lvl = Number(s.level || s.proficiency) || (s.confidence === 'high' ? 8 : s.confidence === 'medium' ? 6 : 4);
       sums[code] = (sums[code] || 0) + lvl;
       counts[code] = (counts[code] || 0) + 1;
     }
   });
 
-  const result = { ...defaults };
+  const result = { ...zeroLevels };
   Object.keys(sums).forEach((code) => {
     result[code] = Math.min(10, Math.max(1, Math.round(sums[code] / counts[code])));
   });
@@ -75,7 +75,7 @@ export const profileService = {
               ? (typeof educationArray[0] === 'string'
                   ? educationArray[0]
                   : `${educationArray[0].degree || ''} ${educationArray[0].cgpa ? `(${educationArray[0].cgpa})` : ''}`.trim())
-              : 'B.Tech Computer Science';
+              : 'Profile Pending (Upload Resume)';
 
             const customerObj = {
               id: data.id,
@@ -95,7 +95,7 @@ export const profileService = {
               internships: experienceArray,
               hackathons: [],
               preferredRoles: ['Software Engineer', 'Full Stack Developer'],
-              fitSummary: 'Active authenticated candidate profile synced with Supabase.',
+              fitSummary: skillsArray.length > 0 ? `Active profile with ${skillsArray.length} verified competencies.` : 'Fresh profile. Upload your resume or add competencies to begin evaluation.',
               createdAt: data.created_at,
               updatedAt: data.updated_at,
             };
@@ -260,6 +260,8 @@ export const profileService = {
     const updatedProfile = {
       ...profile,
       skills: mergedSkills,
+      categories: computeCategoryLevels(mergedSkills),
+      categoryScores: computeCategoryLevels(mergedSkills),
     };
 
     return this.saveProfile(updatedProfile);

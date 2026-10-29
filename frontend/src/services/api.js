@@ -169,22 +169,8 @@ class ApiClient {
 
     let res = null;
 
-    // 1. Try dedicated Role 5 microservice on port 8001
-    try {
-      res = await fetch(`${this.role5BaseUrl}/api/match`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // Fall through to try main backend on port 8000
-    }
-
-    // 2. If port 8001 failed or not ok, fall back to unified backend on port 8000
-    if (!res || !res.ok) {
+    // Direct call if role5 URL matches unified baseUrl (eliminates failed network probe)
+    if (this.role5BaseUrl === this.baseUrl) {
       try {
         res = await fetch(`${this.baseUrl}/api/match`, {
           method: 'POST',
@@ -195,7 +181,34 @@ class ApiClient {
           body: JSON.stringify(payload),
         });
       } catch (err) {
-        console.warn('Unified backend match failed as well:', err);
+        console.warn('Unified backend match error:', err);
+      }
+    } else {
+      // Microservice probe with fast timeout
+      try {
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 1200);
+        res = await fetch(`${this.role5BaseUrl}/api/match`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal,
+        });
+        clearTimeout(timeout);
+      } catch {
+        // Fall back to main backend
+      }
+
+      if (!res || !res.ok) {
+        try {
+          res = await fetch(`${this.baseUrl}/api/match`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        } catch (err) {
+          console.warn('Unified backend match failed as well:', err);
+        }
       }
     }
 
