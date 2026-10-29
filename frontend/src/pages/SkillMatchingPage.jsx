@@ -473,11 +473,11 @@ export default function SkillMatchingPage() {
                 <span>{ratingInfo.label}</span>
               </div>
 
-              {/* Linear Progress Bar Indicator */}
+              {/* Linear Indicator */}
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>
-                  <span>Match Progress</span>
-                  <span style={{ fontWeight: '700', color: ratingInfo.color }}>{matchResult.match_score}%</span>
+                  <span>Requirements Fit Rate</span>
+                  <span style={{ fontWeight: '700', color: ratingInfo.color }}>{matchResult.match_score}% Satisfied</span>
                 </div>
                 <div style={{ height: '7px', background: 'var(--bg-navy)', borderRadius: '4px', overflow: 'hidden' }}>
                   <div
@@ -490,6 +490,11 @@ export default function SkillMatchingPage() {
                     }}
                   />
                 </div>
+                {matchResult.match_score === 0 && (
+                  <p style={{ fontSize: '11.5px', color: '#F4BE5E', marginTop: '8px', lineHeight: 1.5 }}>
+                    Analysis complete: 0 of {matchResult.missing_skills.length} required competencies for this specific role matched Shaurya&apos;s current profile. See the 9 missing requirements below or select an aligned job (e.g. Applied AI Engineer).
+                  </p>
+                )}
               </div>
 
               {/* Counts with Green & Orange/Red Badges */}
